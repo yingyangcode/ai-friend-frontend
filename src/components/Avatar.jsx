@@ -1,13 +1,29 @@
 import React, { useEffect, useRef, useState } from "react";
-import { useAnimations, useGLTF } from "@react-three/drei";
+import { useAnimations, useFBX, useGLTF } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 
 export function Avatar(props) {
-  const { nodes, materials, scene } = useGLTF(
-    "/models/65f4a965fc0792708744fc11.glb"
+  const { nodes, materials, scene } = useGLTF("/models/boy.glb");
+
+  const { animations } = useGLTF("/models/animations.glb");
+
+  const group = useRef();
+  const { actions, mixer } = useAnimations(animations, group);
+
+  const [animation, setAnimation] = useState(
+    animations.find((a) => a.name === "Idle") ? "Idle" : animations[0].name
   );
+  useEffect(() => {
+    actions[animation]
+      .reset()
+      .fadeIn(mixer.stats.actions.inUse === 0 ? 0 : 0.5)
+      .play();
+
+    return () => actions[animation].fadeOut(0.5);
+  }, [animation]);
+
   return (
-    <group {...props} dispose={null}>
+    <group {...props} dispose={null} ref={group}>
       <primitive object={nodes.Hips} />
       <skinnedMesh
         name="EyeLeft"
@@ -91,4 +107,4 @@ export function Avatar(props) {
   );
 }
 
-useGLTF.preload("/models/65f4a965fc0792708744fc11.glb");
+useGLTF.preload("/models/boy.glb");
