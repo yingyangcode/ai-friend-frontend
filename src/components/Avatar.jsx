@@ -4,6 +4,7 @@ import { useFrame, useLoader } from "@react-three/fiber";
 import { useControls, button } from "leva";
 import { facialExpressions, lipsync_mapping } from "../utils/avatarUtils";
 import { useAvatarAnimations } from "../hooks/useAvatarAnimations";
+import { useBlink } from "../hooks/useBlink";
 
 import { useChat } from "../hooks/useChat";
 import * as THREE from "three";
@@ -60,7 +61,6 @@ export function Avatar(props) {
     });
   };
 
-  const [blink, setBlink] = useState(false);
   const [winkLeft, setWinkLeft] = useState(false);
   const [winkRight, setWinkRight] = useState(false);
   const [facialExpression, setFacialExpression] = useState("");
@@ -177,20 +177,7 @@ export function Avatar(props) {
       })
     )
   );
-  useEffect(() => {
-    let blinkTimeout;
-    const nextBlink = () => {
-      blinkTimeout = setTimeout(() => {
-        setBlink(true);
-        setTimeout(() => {
-          setBlink(false);
-          nextBlink();
-        }, 200);
-      }, THREE.MathUtils.randInt(1000, 5000));
-    };
-    nextBlink();
-    return () => clearTimeout(blinkTimeout);
-  }, []);
+  const { blink } = useBlink();
 
   return (
     <group {...props} dispose={null} ref={group}>
