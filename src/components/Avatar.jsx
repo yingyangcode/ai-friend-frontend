@@ -3,6 +3,7 @@ import { useAnimations, useFBX, useGLTF } from "@react-three/drei";
 import { useFrame, useLoader } from "@react-three/fiber";
 import { useControls, button } from "leva";
 import { facialExpressions, lipsync_mapping } from "../utils/avatarUtils";
+import { useAvatarAnimations } from "../hooks/useAvatarAnimations";
 
 import { useChat } from "../hooks/useChat";
 import * as THREE from "three";
@@ -29,21 +30,8 @@ export function Avatar(props) {
     audio.onended = onMessagePlayed;
   }, [message]);
 
-  const { animations } = useGLTF("/models/animations.glb");
-
   const group = useRef();
-  const { actions, mixer } = useAnimations(animations, group);
-  const [animation, setAnimation] = useState(
-    animations.find((a) => a.name === "Idle") ? "Idle" : animations[0].name
-  );
-  useEffect(() => {
-    actions[animation]
-      .reset()
-      .fadeIn(mixer.stats.actions.inUse === 0 ? 0 : 0.5)
-      .play();
-
-    return () => actions[animation].fadeOut(0.5);
-  }, [animation]);
+  const { animations, animation, setAnimation } = useAvatarAnimations(group);
 
   const lerpMorphTarget = (target, value, speed = 0.1) => {
     scene.traverse((child) => {
