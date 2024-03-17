@@ -1,10 +1,74 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useAnimations, useFBX, useGLTF } from "@react-three/drei";
-import { useFrame } from "@react-three/fiber";
+import { useFrame, useLoader } from "@react-three/fiber";
+import { useControls } from "leva";
+
+import * as THREE from "three";
+
+const corresponding = {
+  A: "viseme_PP",
+  B: "viseme_kk",
+  C: "viseme_I",
+  D: "viseme_AA",
+  E: "viseme_O",
+  F: "viseme_U",
+  G: "viseme_FF",
+  H: "viseme_TH",
+  X: "viseme_PP",
+};
 
 export function Avatar(props) {
-  const { nodes, materials, scene } = useGLTF("/models/boy.glb");
+  const { playAudio, script } = useControls({
+    playAudio: false,
+    script: {
+      value: "greetings",
+      options: ["greetings"],
+    },
+  });
+  const audio = useMemo(() => new Audio(`/audios/${script}.mp3`), [script]);
+  const jsonFile = useLoader(THREE.FileLoader, `audios/${script}.json`);
+  const lipsync = JSON.parse(jsonFile);
 
+  useFrame(() => {
+    const currentAudioTime = audio.currentTime;
+
+    Object.values(corresponding).forEach((value) => {
+      nodes.Wolf3D_Head.morphTargetInfluences[
+        nodes.Wolf3D_Head.morphTargetDictionary[value]
+      ] = 0;
+      nodes.Wolf3D_Teeth.morphTargetInfluences[
+        nodes.Wolf3D_Teeth.morphTargetDictionary[value]
+      ] = 0;
+    });
+
+    for (let i = 0; i < lipsync.mouthCues.length; i++) {
+      const mouthCue = lipsync.mouthCues[i];
+      if (
+        currentAudioTime >= mouthCue.start &&
+        currentAudioTime <= mouthCue.end
+      ) {
+        nodes.Wolf3D_Head.morphTargetInfluences[
+          nodes.Wolf3D_Head.morphTargetDictionary[corresponding[mouthCue.value]]
+        ] = 1;
+        nodes.Wolf3D_Teeth.morphTargetInfluences[
+          nodes.Wolf3D_Teeth.morphTargetDictionary[
+            corresponding[mouthCue.value]
+          ]
+        ] = 1;
+        break;
+      }
+    }
+  });
+
+  useEffect(() => {
+    if (playAudio) {
+      audio.play();
+    } else {
+      audio.pause();
+    }
+  }, [playAudio, script]);
+
+  const { nodes, materials, scene } = useGLTF("/models/boy.glb");
   const { animations } = useGLTF("/models/animations.glb");
 
   const group = useRef();
@@ -13,6 +77,7 @@ export function Avatar(props) {
   const [animation, setAnimation] = useState(
     animations.find((a) => a.name === "Idle") ? "Idle" : animations[0].name
   );
+
   useEffect(() => {
     actions[animation]
       .reset()
