@@ -3,12 +3,32 @@ import { useAnimations, useFBX, useGLTF } from "@react-three/drei";
 import { useFrame, useLoader } from "@react-three/fiber";
 import { useControls, button } from "leva";
 import { facialExpressions, lipsync_mapping } from "../utils/avatarUtils";
+
+import { useChat } from "../hooks/useChat";
 import * as THREE from "three";
 let setupMode = false;
 export function Avatar(props) {
+  const { nodes, materials, scene } = useGLTF("/models/boy.glb");
+
+  const { message, onMessagePlayed, chat } = useChat();
+
   const [lipsync, setLipsync] = useState();
 
-  const { nodes, materials, scene } = useGLTF("/models/boy.glb");
+  useEffect(() => {
+    console.log(message);
+    if (!message) {
+      setAnimation("Idle");
+      return;
+    }
+    setAnimation(message.animation);
+    setFacialExpression(message.facialExpression);
+    setLipsync(message.lipsync);
+    const audio = new Audio("data:audio/mp3;base64," + message.audio);
+    audio.play();
+    setAudio(audio);
+    audio.onended = onMessagePlayed;
+  }, [message]);
+
   const { animations } = useGLTF("/models/animations.glb");
 
   const group = useRef();

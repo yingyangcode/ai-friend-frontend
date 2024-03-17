@@ -1,4 +1,9 @@
-import { CameraControls, ContactShadows, Environment } from "@react-three/drei";
+import {
+  CameraControls,
+  ContactShadows,
+  Environment,
+  Text,
+} from "@react-three/drei";
 import { useRef, useEffect, useState, Suspense } from "react";
 import { useChat } from "../hooks/useChat";
 import { Avatar } from "./Avatar";
